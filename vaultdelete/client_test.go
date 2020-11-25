@@ -15,6 +15,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	fmt.Println("**SETUP**")
 	u := uuid.New()
 	uu := u.String()
 	fmt.Println("Docker container name:", uu)
@@ -24,8 +25,11 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 	fmt.Println("vaultToken:", vaultToken)
+	fmt.Println("**END SETUP**")
 	exitVal := m.Run()
+	fmt.Println("**TEARDOWN**")
 	TearDown(uu)
+	fmt.Println("**END TEARDOWN**")
 	os.Exit(exitVal)
 }
 
