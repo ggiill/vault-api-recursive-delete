@@ -53,7 +53,7 @@ func Test(t *testing.T) {
 }
 
 func Setup(u string) string {
-	commandText := fmt.Sprintf("docker run --cap-add=IPC_LOCK -p 8200:8200 --name %v vault server -dev", u)
+	commandText := fmt.Sprintf("docker run --cap-add=IPC_LOCK -p 8200:8200 --name %v -l %v vault server -dev", u, u)
 	cmd := exec.Command("bash", "-c", commandText)
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
@@ -84,11 +84,12 @@ func Setup(u string) string {
 }
 
 func TearDown(containerName string) {
-	commandText := fmt.Sprintf("docker kill %v", containerName)
+	commandText := fmt.Sprintf("docker kill %v && docker container prune -f --filter label=%v", containerName, containerName)
 	cmd := exec.Command("bash", "-c", commandText)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Docker killed container:", string(out))
+	fmt.Println("Docker killed & pruned container:", string(out))
+
 }
