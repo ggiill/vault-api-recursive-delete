@@ -24,7 +24,7 @@ type VaultClient struct {
 }
 
 // Request makes an http request.
-func (v VaultClient) Request(endpoint string, dataPath string, body io.Reader) ([]byte, error) {
+func (v *VaultClient) Request(endpoint string, dataPath string, body io.Reader) ([]byte, error) {
 	info, ok := versionPaths[v.version][endpoint]
 	if !ok {
 		return nil, fmt.Errorf("endpoint '%s' not mapped for version '%s'", endpoint, v.version)
@@ -52,45 +52,49 @@ func (v VaultClient) Request(endpoint string, dataPath string, body io.Reader) (
 	return resBody, nil
 }
 
-// RecursiveDelete performs a recursive delete.
-func (v VaultClient) RecursiveDelete(dataPath string, delete bool) error {
-	res, err := v.Request("list", dataPath, nil)
-	if err != nil {
-		return err
-	}
-	j := new(map[string]interface{})
-	err = json.Unmarshal(res, j)
-	if err != nil {
-		return err
-	}
-	data, ok := (*j)["data"].(map[string]interface{})
-	if !ok {
-		return errors.New("no ['data']")
-	}
-	keysTmp, ok := data["keys"].([]interface{})
-	if !ok {
-		return errors.New("no ['keys']")
-	}
-	for _, k := range keysTmp {
-		if key, ok := k.(string); ok {
-			newPath := path.Join(dataPath, key)
-			if strings.HasSuffix(key, "/") {
-				err := v.RecursiveDelete(newPath, delete)
-				if err != nil {
-					return err
+// GetPaths gets paths to delete.
+func (v *VaultClient) GetPaths(dataPath string) ([]string, error) {
+	paths := []string{}
+	var p func(dataPath string) error
+	p = func(dataPath string) error {
+		res, err := v.Request("list", dataPath, nil)
+		if err != nil {
+			return err
+		}
+		j := new(map[string]interface{})
+		err = json.Unmarshal(res, j)
+		if err != nil {
+			return err
+		}
+		data, ok := (*j)["data"].(map[string]interface{})
+		if !ok {
+			return errors.New("no ['data']")
+		}
+		keysTmp, ok := data["keys"].([]interface{})
+		if !ok {
+			return errors.New("no ['keys']")
+		}
+		for _, k := range keysTmp {
+			if key, ok := k.(string); ok {
+				newPath := path.Join(dataPath, key)
+				paths = append(paths, newPath)
+				if strings.HasSuffix(key, "/") {
+					err := p(newPath)
+					if err != nil {
+						return err
+					}
+				} else {
+					fmt.Println(newPath)
 				}
-			} else if delete {
-				_, err := v.Request("delete", newPath, nil)
-				if err != nil {
-					return err
-				}
-				fmt.Println("deleted:", newPath)
-			} else {
-				fmt.Println(newPath)
 			}
 		}
+		return nil
 	}
-	return nil
+	err := p(dataPath)
+	if err != nil {
+		return nil, err
+	}
+	return paths, nil
 }
 
 // NewVaultClient creates a new VaultClient.

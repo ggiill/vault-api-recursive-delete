@@ -19,6 +19,10 @@ var versionPaths = map[string]map[string]*endpointPath{
 			method: "DELETE",
 			path:   "v1/secret/data",
 		},
+		"deleteMetadata": &endpointPath{
+			method: "DELETE",
+			path:   "v1/secret/metadata",
+		},
 		"post": &endpointPath{
 			method: "POST",
 			path:   "v1/secret/data",
