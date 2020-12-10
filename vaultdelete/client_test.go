@@ -61,7 +61,7 @@ func Test(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		t.Log("created secret:", string(resp))
+		t.Logf("created secret @ %v: %v | %v", ptc, data, string(resp))
 	}
 	paths, err := client.GetPaths("a")
 	if err != nil {

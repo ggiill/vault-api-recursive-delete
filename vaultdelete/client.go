@@ -54,7 +54,7 @@ func (v *VaultClient) Request(endpoint string, dataPath string, body io.Reader) 
 
 // GetPaths gets paths to delete.
 func (v *VaultClient) GetPaths(dataPath string) ([]string, error) {
-	paths := []string{}
+	paths := make(map[string]bool) // This is a set, since "a/b/" and "a/b" can both exist as "a/b" paths
 	var p func(dataPath string) error
 	p = func(dataPath string) error {
 		res, err := v.Request("list", dataPath, nil)
@@ -77,14 +77,12 @@ func (v *VaultClient) GetPaths(dataPath string) ([]string, error) {
 		for _, k := range keysTmp {
 			if key, ok := k.(string); ok {
 				newPath := path.Join(dataPath, key)
-				paths = append(paths, newPath)
+				paths[newPath] = true
 				if strings.HasSuffix(key, "/") {
 					err := p(newPath)
 					if err != nil {
 						return err
 					}
-				} else {
-					fmt.Println(newPath)
 				}
 			}
 		}
@@ -94,7 +92,13 @@ func (v *VaultClient) GetPaths(dataPath string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return paths, nil
+	res := make([]string, len(paths))
+	pos := 0
+	for k := range paths {
+		res[pos] = k
+		pos++
+	}
+	return res, nil
 }
 
 // NewVaultClient creates a new VaultClient.
