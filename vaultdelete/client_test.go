@@ -15,21 +15,21 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	fmt.Println("**SETUP**")
+	log.Print("**SETUP**")
 	u := uuid.New()
 	uu := u.String()
-	fmt.Println("Docker container name:", uu)
+	log.Print("Docker container name:", uu)
 	vaultToken := Setup(uu)
 	err := os.Setenv("VAULT_TOKEN_TESTING", vaultToken)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("vaultToken:", vaultToken)
-	fmt.Println("**END SETUP**")
+	log.Print("vaultToken:", vaultToken)
+	log.Print("**END SETUP**")
 	exitVal := m.Run()
-	fmt.Println("**TEARDOWN**")
+	log.Print("**TEARDOWN**")
 	TearDown(uu)
-	fmt.Println("**END TEARDOWN**")
+	log.Print("**END TEARDOWN**")
 	os.Exit(exitVal)
 }
 
@@ -127,6 +127,5 @@ func TearDown(containerName string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Docker killed & pruned container:", string(out))
-
+	log.Print("Docker killed & pruned container:", string(out))
 }
