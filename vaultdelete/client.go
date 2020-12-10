@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"sort"
 	"strings"
 )
 
@@ -98,6 +99,7 @@ func (v *VaultClient) GetPaths(dataPath string) ([]string, error) {
 		res[pos] = k
 		pos++
 	}
+	sort.Strings(res)
 	return res, nil
 }
 

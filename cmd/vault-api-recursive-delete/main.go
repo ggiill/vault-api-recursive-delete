@@ -9,12 +9,22 @@ import (
 )
 
 func main() {
-	vaultAddress := flag.String("VAULT_ADDR", os.Getenv("VAULT_ADDR"), "Set the VAULT_ADDR")
-	vaultToken := flag.String("VAULT_TOKEN", os.Getenv("VAULT_TOKEN"), "Set the VAULT_TOKEN")
-	vaultCert := flag.String("VAULT_CACERT", os.Getenv("VAULT_CACERT"), "Set the VAULT_CACERT")
+	vaultAddress := flag.String("VAULT_ADDR", "", "Set the VAULT_ADDR")
+	vaultToken := flag.String("VAULT_TOKEN", "", "Set the VAULT_TOKEN")
+	vaultCert := flag.String("VAULT_CACERT", "", "Set the VAULT_CACERT")
 	path := flag.String("path", "", "Path to recursively delete")
 	deleteMetadata := flag.Bool("delete-metadata", false, "Delete metadata as well")
 	flag.Parse()
+
+	if *vaultAddress == "" {
+		*vaultAddress = os.Getenv("VAULT_ADDR")
+	}
+	if *vaultToken == "" {
+		*vaultToken = os.Getenv("VAULT_TOKEN")
+	}
+	if *vaultCert == "" {
+		*vaultCert = os.Getenv("VAULT_CACERT")
+	}
 
 	client, err := vaultdelete.NewVaultClient("v2", *vaultAddress, *vaultToken, []string{*vaultCert})
 	if err != nil {
