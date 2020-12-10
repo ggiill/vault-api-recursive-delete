@@ -48,11 +48,44 @@ func Test(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	resp, err := client.Request("post", "a/b/c/d", bytes.NewReader(dataBytes))
-	fmt.Println("created secret:", string(resp))
-	err = client.RecursiveDelete("a", true)
+	pathsToCreate := []string{
+		"a",
+		"a/b",
+		"a/b/c",
+		"a/b/f",
+		"a/b/c/d",
+		"a/b/c/e",
+	}
+	for _, ptc := range pathsToCreate {
+		resp, err := client.Request("post", ptc, bytes.NewReader(dataBytes))
+		if err != nil {
+			t.Error(err)
+		}
+		t.Log("created secret:", string(resp))
+	}
+	paths, err := client.GetPaths("a")
 	if err != nil {
 		t.Error(err)
+	}
+	deleteTypes := map[string]string{
+		"delete":         "deleted:",
+		"deleteMetadata": "metadata deleted:",
+	}
+	for method, message := range deleteTypes {
+		for _, path := range paths {
+			_, err := client.Request(method, path, nil)
+			t.Log(message, path)
+			if err != nil {
+				t.Error(err)
+			}
+		}
+		pr, err := client.GetPaths("a")
+		if err != nil {
+			if fmt.Sprint(err) != "no ['data']" {
+				t.Error(err)
+			}
+		}
+		t.Log("Paths remaining:", pr)
 	}
 }
 
