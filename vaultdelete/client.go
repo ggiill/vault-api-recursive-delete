@@ -53,37 +53,82 @@ func (v *VaultClient) Request(endpoint string, dataPath string, body io.Reader) 
 	return resBody, nil
 }
 
+// ListResults gets keys for a path as an array of strings.
+func (v *VaultClient) ListResults(dataPath string) ([]string, error) {
+	res, err := v.Request("list", dataPath, nil)
+	if err != nil {
+		return nil, err
+	}
+	j := new(map[string]interface{})
+	err = json.Unmarshal(res, j)
+	if err != nil {
+		return nil, err
+	}
+	data, ok := (*j)["data"].(map[string]interface{})
+	if !ok {
+		return nil, errors.New("no ['data']")
+	}
+	keysTmp, ok := data["keys"].([]interface{})
+	if !ok {
+		return nil, errors.New("no ['keys']")
+	}
+	keys := make([]string, len(keysTmp))
+	for i, k := range keysTmp {
+		key, ok := k.(string)
+		if ok {
+			keys[i] = key
+		} else {
+			return nil, errors.New("issue converting 'keys' interface to string")
+		}
+	}
+	return keys, nil
+}
+
+// GetResults gets the values for a key AT a specific path.
+func (v *VaultClient) GetResults(dataPath string) ([]string, error) {
+	res, err := v.Request("get", dataPath, nil)
+	if err != nil {
+		return nil, err
+	}
+	j := new(map[string]interface{})
+	err = json.Unmarshal(res, j)
+	if err != nil {
+		return nil, err
+	}
+	data, ok := (*j)["data"].(map[string]interface{})
+	if !ok {
+		return nil, errors.New("no ['data']")
+	}
+	_, ok = data["data"].(map[string]interface{})
+	if !ok {
+		return nil, errors.New("no ['data']['data']")
+	}
+	return []string{dataPath}, nil
+}
+
 // GetPaths gets paths to delete.
 func (v *VaultClient) GetPaths(dataPath string) ([]string, error) {
+	var subErr error
 	paths := make(map[string]bool) // This is a set, since "a/b/" and "a/b" can both exist as "a/b" paths
 	var p func(dataPath string) error
 	p = func(dataPath string) error {
-		res, err := v.Request("list", dataPath, nil)
+		keys, err := v.ListResults(dataPath)
 		if err != nil {
-			return err
+			keys, subErr = v.GetResults(dataPath)
+			if subErr != nil {
+				return fmt.Errorf("%s | %s", err, subErr)
+			}
+			if keys == nil {
+				return err
+			}
 		}
-		j := new(map[string]interface{})
-		err = json.Unmarshal(res, j)
-		if err != nil {
-			return err
-		}
-		data, ok := (*j)["data"].(map[string]interface{})
-		if !ok {
-			return errors.New("no ['data']")
-		}
-		keysTmp, ok := data["keys"].([]interface{})
-		if !ok {
-			return errors.New("no ['keys']")
-		}
-		for _, k := range keysTmp {
-			if key, ok := k.(string); ok {
-				newPath := path.Join(dataPath, key)
-				paths[newPath] = true
-				if strings.HasSuffix(key, "/") {
-					err := p(newPath)
-					if err != nil {
-						return err
-					}
+		for _, key := range keys {
+			newPath := path.Join(dataPath, key)
+			paths[newPath] = true
+			if strings.HasSuffix(key, "/") {
+				err := p(newPath)
+				if err != nil {
+					return err
 				}
 			}
 		}
