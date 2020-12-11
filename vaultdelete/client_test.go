@@ -71,8 +71,8 @@ func Test(t *testing.T) {
 		"delete":         "deleted:",
 		"deleteMetadata": "metadata deleted:",
 	}
-	for method, message := range deleteTypes {
-		for _, path := range paths {
+	for _, path := range paths {
+		for method, message := range deleteTypes {
 			_, err := client.Request(method, path, nil)
 			t.Log(message, path)
 			if err != nil {

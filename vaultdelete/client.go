@@ -110,6 +110,7 @@ func (v *VaultClient) GetResults(dataPath string) ([]string, error) {
 func (v *VaultClient) GetPaths(dataPath string) ([]string, error) {
 	var subErr error
 	paths := make(map[string]bool) // This is a set, since "a/b/" and "a/b" can both exist as "a/b" paths
+	paths[dataPath] = true
 	var p func(dataPath string) error
 	p = func(dataPath string) error {
 		keys, err := v.ListResults(dataPath)
