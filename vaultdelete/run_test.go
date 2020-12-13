@@ -34,7 +34,16 @@ func TestMain(m *testing.M) {
 }
 
 func Test(t *testing.T) {
-	client, err := NewVaultClient("v2", "http://0.0.0.0:8200", os.Getenv("VAULT_TOKEN_TESTING"), nil)
+	r := RunConfig{
+		Version:        "v2",
+		Address:        "http://0.0.0.0:8200",
+		Token:          os.Getenv("VAULT_TOKEN_TESTING"),
+		Path:           "a",
+		Interactive:    false,
+		DeleteMetadata: true,
+	}
+
+	client, err := NewVaultClient("v2", r.Address, r.Token, nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -67,26 +76,18 @@ func Test(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	deleteTypes := map[string]string{
-		"delete":         "deleted:",
-		"deleteMetadata": "metadata deleted:",
+	t.Log("paths:", paths)
+	err = Run(r)
+	if err != nil {
+		t.Error(err)
 	}
-	for _, path := range paths {
-		for method, message := range deleteTypes {
-			_, err := client.Request(method, path, nil)
-			t.Log(message, path)
-			if err != nil {
-				t.Error(err)
-			}
+	paths, err = client.GetPaths("a")
+	if err != nil {
+		if fmt.Sprint(err) != "no ['data'] | no ['data']" {
+			t.Error(err)
 		}
-		pr, err := client.GetPaths("a")
-		if err != nil {
-			if fmt.Sprint(err) != "no ['data']" {
-				t.Error(err)
-			}
-		}
-		t.Log("Paths remaining:", pr)
 	}
+	t.Log("paths:", paths)
 }
 
 func Setup(u string) string {

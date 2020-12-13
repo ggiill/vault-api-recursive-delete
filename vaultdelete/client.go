@@ -145,7 +145,7 @@ func (v *VaultClient) GetPaths(dataPath string) ([]string, error) {
 		res[pos] = k
 		pos++
 	}
-	sort.Strings(res)
+	sort.Sort(sort.Reverse(PathSort(res)))
 	return res, nil
 }
 
@@ -173,4 +173,35 @@ func NewVaultClient(version, address, token string, certPaths []string) (*VaultC
 		token:   token,
 	}
 	return client, nil
+}
+
+// PathSort satisfies sort.Interface and sorts paths, taking into account subdirectories.
+type PathSort []string
+
+func (p PathSort) Len() int {
+	return len(p)
+}
+
+func (p PathSort) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+
+func (p PathSort) Less(i, j int) bool {
+	is := strings.Split(strings.ToLower(p[i]), "/")
+	js := strings.Split(strings.ToLower(p[j]), "/")
+	for p := 0; ; p++ {
+		if (p == len(is)) || (p == len(js)) {
+			if len(is) < len(js) {
+				return true
+			}
+			return false
+		}
+		if is[p] < js[p] {
+			return true
+		}
+		if is[p] == js[p] {
+			continue
+		}
+		return false
+	}
 }
