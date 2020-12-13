@@ -41,17 +41,20 @@ func Run(r RunConfig) error {
 		}
 	}
 	for _, path := range paths {
+		msg := "deleted:"
 		_, err := client.Request("delete", path, nil)
-		fmt.Println("deleted:", path)
 		if err != nil {
 			return err
 		}
 		if r.DeleteMetadata {
 			_, err := client.Request("deleteMetadata", path, nil)
 			if err != nil {
+				fmt.Println(msg, path)
 				return err
 			}
+			msg = "deleted (w/ metadata):"
 		}
+		fmt.Println(msg, path)
 	}
 	return nil
 }
