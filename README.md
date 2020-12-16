@@ -6,10 +6,10 @@ Recursively delete paths on Vault's KV engine.
 $ cd cmd/vault-api-recursive-delete
 
 # Create some secrets under the "test/" path
-$ vault kv put secret/test hey=yo
-$ vault kv put secret/test/a hey=yo
-$ vault kv put secret/test/a/b hey=yo
-$ vault kv put secret/test/a/b/c hey=yo
+$ vault kv put secret/t hey=yo
+$ vault kv put secret/t/a hey=yo
+$ vault kv put secret/t/a/b hey=yo
+$ vault kv put secret/t/a/b/c hey=yo
 
 # Check the CLI args
 $ go run main.go --help
@@ -25,14 +25,16 @@ $ go run main.go --help
         Path to recursively delete
 
 # Recursively delete secrets and path metadata
-$ go run main.go --path test --delete-metadata
+$ go run main.go --path t --delete-metadata
 These paths will be deleted:
-test/a
-test/a/b
-test/a/b/c
+t/a/b/c
+t/a/b
+t/a
+t
 Do you want to proceed? (Y/N)
 Y
-deleted: test/a
-deleted: test/a/b
-deleted: test/a/b/c
+deleted: t/a/b/c
+deleted: t/a/b
+deleted: t/a
+deleted: t
 ```
