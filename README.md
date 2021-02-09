@@ -1,6 +1,9 @@
 # vault-api-recursive-delete
 Recursively delete paths on Vault's KV engine.
 
+# WARNING
+**This is still in development and not yet stable.**
+
 ### CLI
 ```shell
 $ cd cmd/vault-api-recursive-delete
