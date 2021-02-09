@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gturetsky/vault-api-recursive-delete/vaultdelete"
+	"github.com/ggiill/vault-api-recursive-delete/vaultdelete"
 )
 
 func main() {
